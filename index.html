@@ -155,8 +155,8 @@
 
   <section class="card">
     <div id="formView">
-      <p class="lead">Isi data siswa di bawah ini untuk melihat akun belajar dan password.</p>
-      <div class="demo" id="demo">Mode contoh: situs belum terhubung ke Google Sheet. Coba dengan nama <strong>Budi Santoso</strong>, kelas <strong>5A</strong>, lahir <strong>12 Maret 2015</strong>.</div>
+      <p class="lead">Isi nama, kelas, dan NISN siswa di bawah ini untuk melihat akun belajar dan password.</p>
+      <div class="demo" id="demo">Mode contoh: situs belum terhubung ke Google Sheet. Coba dengan nama <strong>Budi Santoso</strong>, kelas <strong>5A</strong>, NISN <strong>0098765432</strong>.</div>
       <div class="alert" id="alert" role="alert"></div>
 
       <form id="form" autocomplete="off" novalidate>
@@ -164,15 +164,14 @@
           <label for="nama">Nama lengkap siswa</label>
           <input id="nama" name="nama" type="text" placeholder="Contoh: Budi Santoso" required autocapitalize="words" spellcheck="false">
         </div>
-        <div class="row">
-          <div class="field">
-            <label for="kelas">Kelas</label>
-            <input id="kelas" name="kelas" type="text" placeholder="Contoh: 5A" required autocapitalize="characters" spellcheck="false">
-          </div>
-          <div class="field">
-            <label for="lahir">Tanggal lahir</label>
-            <input id="lahir" name="lahir" type="date" required>
-          </div>
+        <div class="field">
+          <label for="kelas">Kelas</label>
+          <input id="kelas" name="kelas" type="text" placeholder="Contoh: 5A" required autocapitalize="characters" spellcheck="false">
+        </div>
+        <div class="field">
+          <label for="nisn">NISN</label>
+          <input id="nisn" name="nisn" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="10" placeholder="10 angka" required autocomplete="off">
+          <span class="hint">NISN tertera di rapor atau kartu pelajar.</span>
         </div>
         <button class="btn" id="submit" type="submit"><span class="spin" aria-hidden="true"></span><span id="btnText">Cari akun belajar</span></button>
       </form>
@@ -203,24 +202,25 @@
     </div>
   </section>
 
-  <footer>Data hanya dapat dilihat dengan nama, kelas, dan tanggal lahir yang cocok.</footer>
+  <footer>Data hanya dapat dilihat dengan nama, kelas, dan NISN yang cocok.</footer>
 </main>
 
 <script>
   // ====== PENGATURAN ======
   // Tempel URL Web App dari Google Apps Script di bawah ini (berakhiran /exec).
   const CONFIG = {
-    SCRIPT_URL: "https://script.google.com/macros/s/AKfycbyRNjnHKrVL5bNwlpaNNj-LAKEv8BuYs30SkDDrUSP5g8FX-d5kq3EYboWGuTCoGE3NHA/exec",
-    SCHOOL: "SMP HANG TUAH 1 SBY"
+    SCRIPT_URL: "",
+    SCHOOL: "Nama Sekolah"
   };
   // ========================
 
   const $ = (id) => document.getElementById(id);
-  const DEMO = { nama: "Budi Santoso", kelas: "5A", lahir: "2015-03-12", akun: "budi.santoso@belajar.id", password: "Belajar2024" };
+  const DEMO = { nama: "Budi Santoso", kelas: "5A", nisn: "0098765432", akun: "budi.santoso@belajar.id", password: "Belajar2024" };
   let current = null;
 
   $("schoolName").textContent = CONFIG.SCHOOL;
   if (!CONFIG.SCRIPT_URL) $("demo").classList.add("show");
+  $("nisn").addEventListener("input", (e) => { e.target.value = e.target.value.replace(/\D/g, ""); });
 
   const norm = (s) => s.trim().toLowerCase().replace(/\s+/g, " ");
   const normKelas = (s) => s.trim().toUpperCase().replace(/\s+/g, "");
@@ -236,16 +236,16 @@
     $("btnText").textContent = on ? "Mencari…" : "Cari akun belajar";
   }
 
-  async function lookup(nama, kelas, lahir) {
+  async function lookup(nama, kelas, nisn) {
     if (!CONFIG.SCRIPT_URL) {
       await new Promise((r) => setTimeout(r, 600));
-      const hit = norm(nama) === norm(DEMO.nama) && normKelas(kelas) === normKelas(DEMO.kelas) && lahir === DEMO.lahir;
+      const hit = norm(nama) === norm(DEMO.nama) && normKelas(kelas) === normKelas(DEMO.kelas) && nisn === DEMO.nisn;
       return hit ? { ok: true, nama: DEMO.nama, kelas: DEMO.kelas, akun: DEMO.akun, password: DEMO.password } : { ok: false, error: "not_found" };
     }
     const ctrl = new AbortController();
     const timer = setTimeout(() => ctrl.abort(), 20000);
     try {
-      const qs = new URLSearchParams({ nama: nama.trim(), kelas: kelas.trim(), lahir });
+      const qs = new URLSearchParams({ nama: nama.trim(), kelas: kelas.trim(), nisn });
       const res = await fetch(CONFIG.SCRIPT_URL + "?" + qs.toString(), { signal: ctrl.signal });
       return await res.json();
     } finally {
@@ -256,20 +256,24 @@
   $("form").addEventListener("submit", async (e) => {
     e.preventDefault();
     $("alert").classList.remove("show");
-    const nama = $("nama").value, kelas = $("kelas").value, lahir = $("lahir").value;
-    if (!nama.trim() || !kelas.trim() || !lahir) {
-      showError("Lengkapi nama, kelas, dan tanggal lahir terlebih dahulu.");
+    const nama = $("nama").value, kelas = $("kelas").value, nisn = $("nisn").value.replace(/\D/g, "");
+    if (!nama.trim() || !kelas.trim() || !nisn) {
+      showError("Lengkapi nama, kelas, dan NISN terlebih dahulu.");
+      return;
+    }
+    if (nisn.length !== 10) {
+      showError("NISN terdiri dari 10 angka. Periksa lagi, termasuk angka 0 di depan.");
       return;
     }
     setLoading(true);
     try {
-      const data = await lookup(nama, kelas, lahir);
+      const data = await lookup(nama, kelas, nisn);
       if (data && data.ok) {
         showResult(data);
       } else if (data && data.error === "too_many") {
         showError("Terlalu banyak percobaan. Tunggu 10 menit, lalu coba lagi.");
       } else {
-        showError("Data tidak ditemukan. Periksa penulisan nama, kelas, dan tanggal lahir. Jika masih gagal, hubungi wali kelas.");
+        showError("Data tidak ditemukan. Periksa penulisan nama, kelas, dan NISN. Jika masih gagal, hubungi wali kelas.");
       }
     } catch (err) {
       showError("Tidak bisa terhubung ke server. Periksa koneksi internet, lalu coba lagi.");
