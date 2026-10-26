@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Cek Akun Belajar</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F6F7FC;
+    --card: #FFFFFF;
+    --ink: #1B2340;
+    --muted: #5E6784;
+    --line: #DDE1F0;
+    --primary: #3B4FD8;
+    --primary-dark: #2B3CB3;
+    --soft: #EEF1FF;
+    --pencil: #FFC93C;
+    --ok: #14804A;
+    --danger: #B3261E;
+    --danger-bg: #FDECEA;
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  *, *::before, *::after { box-sizing: inherit; }
+  html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    line-height: 1.55;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 32px 16px 48px;
+  }
+  .wrap { width: 100%; max-width: 460px; }
+
+  header { text-align: center; margin-bottom: 24px; }
+  .mark {
+    width: 56px; height: 56px; margin: 0 auto 14px;
+    border-radius: 16px; background: var(--primary);
+    display: grid; place-items: center; position: relative;
+  }
+  .mark::after {
+    content: ""; position: absolute; right: -6px; bottom: -6px;
+    width: 20px; height: 20px; border-radius: 6px; background: var(--pencil);
+  }
+  .mark svg { width: 28px; height: 28px; }
+  h1 { font-size: 1.65rem; line-height: 1.2; margin: 0 0 6px; font-weight: 800; letter-spacing: -0.01em; }
+  .school { margin: 0; color: var(--muted); font-size: .95rem; }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    padding: 24px;
+    box-shadow: 0 10px 30px rgba(43, 60, 179, .07);
+  }
+  .lead { margin: 0 0 20px; color: var(--muted); font-size: .95rem; }
+
+  .field { margin-bottom: 16px; }
+  label { display: block; font-weight: 600; font-size: .9rem; margin-bottom: 6px; }
+  .hint { display: block; font-weight: 400; color: var(--muted); font-size: .82rem; margin-top: 4px; }
+  input {
+    width: 100%; font: inherit; font-size: 1rem; color: var(--ink);
+    padding: 12px 14px; min-height: 48px;
+    border: 1.5px solid var(--line); border-radius: 12px; background: #fff;
+    transition: border-color .15s, box-shadow .15s;
+  }
+  input::placeholder { color: #9AA1BD; }
+  input:hover { border-color: #C3C9E3; }
+  input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 4px rgba(59, 79, 216, .15); }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  button { font: inherit; cursor: pointer; }
+  .btn {
+    width: 100%; min-height: 50px; margin-top: 4px;
+    border: 0; border-radius: 12px; background: var(--primary); color: #fff;
+    font-weight: 700; font-size: 1rem;
+    display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+    transition: background .15s, transform .05s;
+  }
+  .btn:hover { background: var(--primary-dark); }
+  .btn:active { transform: translateY(1px); }
+  .btn:disabled { opacity: .75; cursor: progress; }
+  .btn:focus-visible, .mini:focus-visible, .link:focus-visible { outline: 3px solid var(--pencil); outline-offset: 2px; }
+  .spin { width: 18px; height: 18px; border: 3px solid rgba(255,255,255,.4); border-top-color: #fff; border-radius: 50%; animation: spin .7s linear infinite; display: none; }
+  .loading .spin { display: block; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .alert {
+    display: none; margin-bottom: 16px; padding: 12px 14px;
+    border-radius: 12px; font-size: .92rem;
+    background: var(--danger-bg); color: var(--danger); border: 1px solid #F3C5C0;
+  }
+  .alert.show { display: block; }
+  .demo {
+    display: none; margin-bottom: 16px; padding: 10px 14px; border-radius: 12px;
+    background: #FFF6D9; border: 1px solid #F3DE9A; color: #6B5300; font-size: .85rem;
+  }
+  .demo.show { display: block; }
+
+  /* Kartu hasil */
+  #result { display: none; }
+  #result.show { display: block; animation: rise .35s ease-out; }
+  @keyframes rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+  .ticket { border-radius: 16px; background: var(--soft); border: 1px solid #D5DBFA; overflow: hidden; margin-bottom: 16px; }
+  .ticket-top { height: 8px; background: var(--pencil); }
+  .ticket-body { padding: 18px; }
+  .who { font-weight: 700; font-size: 1.1rem; margin: 0; }
+  .cls { margin: 0 0 14px; color: var(--muted); font-size: .9rem; }
+  .cred { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; margin-top: 10px; }
+  .cred small { display: block; color: var(--muted); font-size: .8rem; margin-bottom: 2px; }
+  .cred-line { display: flex; align-items: center; gap: 8px; }
+  .val { flex: 1; min-width: 0; font-weight: 700; font-size: 1.02rem; word-break: break-all; }
+  .val.pw { letter-spacing: .04em; }
+  .mini {
+    flex: none; min-height: 36px; padding: 0 12px;
+    border: 1.5px solid var(--line); border-radius: 10px; background: #fff; color: var(--ink);
+    font-size: .85rem; font-weight: 600;
+  }
+  .mini:hover { border-color: var(--primary); color: var(--primary); }
+  .mini.done { border-color: var(--ok); color: var(--ok); }
+  .note { font-size: .85rem; color: var(--muted); margin: 0 0 16px; }
+  .link { background: none; border: 0; color: var(--primary); font-weight: 600; padding: 8px; display: block; margin: 0 auto; border-radius: 8px; }
+  .link:hover { text-decoration: underline; }
+
+  footer { text-align: center; color: var(--muted); font-size: .82rem; margin-top: 20px; }
+
+  @media (max-width: 420px) {
+    body { padding-top: 20px; }
+    .card { padding: 20px 16px; }
+    .row { grid-template-columns: 1fr; gap: 0; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+  }
+</style>
+</head>
+<body>
+<main class="wrap">
+  <header>
+    <div class="mark" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 8l10-5 10 5-10 5L2 8z"/><path d="M6 10.5V16c0 1.5 2.7 3 6 3s6-1.5 6-3v-5.5"/></svg>
+    </div>
+    <h1>Cek Akun Belajar</h1>
+    <p class="school" id="schoolName">Nama Sekolah</p>
+  </header>
+
+  <section class="card">
+    <div id="formView">
+      <p class="lead">Isi data siswa di bawah ini untuk melihat akun belajar dan password.</p>
+      <div class="demo" id="demo">Mode contoh: situs belum terhubung ke Google Sheet. Coba dengan nama <strong>Budi Santoso</strong>, kelas <strong>5A</strong>, lahir <strong>12 Maret 2015</strong>.</div>
+      <div class="alert" id="alert" role="alert"></div>
+
+      <form id="form" autocomplete="off" novalidate>
+        <div class="field">
+          <label for="nama">Nama lengkap siswa</label>
+          <input id="nama" name="nama" type="text" placeholder="Contoh: Budi Santoso" required autocapitalize="words" spellcheck="false">
+        </div>
+        <div class="row">
+          <div class="field">
+            <label for="kelas">Kelas</label>
+            <input id="kelas" name="kelas" type="text" placeholder="Contoh: 5A" required autocapitalize="characters" spellcheck="false">
+          </div>
+          <div class="field">
+            <label for="lahir">Tanggal lahir</label>
+            <input id="lahir" name="lahir" type="date" required>
+          </div>
+        </div>
+        <button class="btn" id="submit" type="submit"><span class="spin" aria-hidden="true"></span><span id="btnText">Cari akun belajar</span></button>
+      </form>
+    </div>
+
+    <div id="result" aria-live="polite">
+      <div class="ticket">
+        <div class="ticket-top"></div>
+        <div class="ticket-body">
+          <p class="who" id="rNama"></p>
+          <p class="cls" id="rKelas"></p>
+          <div class="cred">
+            <small>Nama akun belajar</small>
+            <div class="cred-line"><span class="val" id="rAkun"></span><button class="mini" type="button" data-copy="akun">Salin</button></div>
+          </div>
+          <div class="cred">
+            <small>Password</small>
+            <div class="cred-line">
+              <span class="val pw" id="rPass"></span>
+              <button class="mini" type="button" id="togglePw" aria-pressed="false">Lihat</button>
+              <button class="mini" type="button" data-copy="pass">Salin</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p class="note">Jaga kerahasiaan password ini. Jika akun tidak bisa dipakai, hubungi wali kelas.</p>
+      <button class="link" id="again" type="button">Cari siswa lain</button>
+    </div>
+  </section>
+
+  <footer>Data hanya dapat dilihat dengan nama, kelas, dan tanggal lahir yang cocok.</footer>
+</main>
+
+<script>
+  // ====== PENGATURAN ======
+  // Tempel URL Web App dari Google Apps Script di bawah ini (berakhiran /exec).
+  const CONFIG = {
+    SCRIPT_URL: "https://script.google.com/macros/s/AKfycbyegytNu9yY6NBKsNuwZt1azQO7tSE9s2dgUWZWttIUsfbAlYsl1GeoHPlzfMHi9hzxBg/exec",
+    SCHOOL: "SMP HANG TUAH 1 SBY"
+  };
+  // ========================
+
+  const $ = (id) => document.getElementById(id);
+  const DEMO = { nama: "Budi Santoso", kelas: "5A", lahir: "2015-03-12", akun: "budi.santoso@belajar.id", password: "Belajar2024" };
+  let current = null;
+
+  $("schoolName").textContent = CONFIG.SCHOOL;
+  if (!CONFIG.SCRIPT_URL) $("demo").classList.add("show");
+
+  const norm = (s) => s.trim().toLowerCase().replace(/\s+/g, " ");
+  const normKelas = (s) => s.trim().toUpperCase().replace(/\s+/g, "");
+
+  function showError(msg) {
+    const a = $("alert");
+    a.textContent = msg;
+    a.classList.add("show");
+  }
+  function setLoading(on) {
+    $("submit").disabled = on;
+    $("submit").classList.toggle("loading", on);
+    $("btnText").textContent = on ? "Mencari…" : "Cari akun belajar";
+  }
+
+  async function lookup(nama, kelas, lahir) {
+    if (!CONFIG.SCRIPT_URL) {
+      await new Promise((r) => setTimeout(r, 600));
+      const hit = norm(nama) === norm(DEMO.nama) && normKelas(kelas) === normKelas(DEMO.kelas) && lahir === DEMO.lahir;
+      return hit ? { ok: true, nama: DEMO.nama, kelas: DEMO.kelas, akun: DEMO.akun, password: DEMO.password } : { ok: false, error: "not_found" };
+    }
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 20000);
+    try {
+      const qs = new URLSearchParams({ nama: nama.trim(), kelas: kelas.trim(), lahir });
+      const res = await fetch(CONFIG.SCRIPT_URL + "?" + qs.toString(), { signal: ctrl.signal });
+      return await res.json();
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
+  $("form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    $("alert").classList.remove("show");
+    const nama = $("nama").value, kelas = $("kelas").value, lahir = $("lahir").value;
+    if (!nama.trim() || !kelas.trim() || !lahir) {
+      showError("Lengkapi nama, kelas, dan tanggal lahir terlebih dahulu.");
+      return;
+    }
+    setLoading(true);
+    try {
+      const data = await lookup(nama, kelas, lahir);
+      if (data && data.ok) {
+        showResult(data);
+      } else if (data && data.error === "too_many") {
+        showError("Terlalu banyak percobaan. Tunggu 10 menit, lalu coba lagi.");
+      } else {
+        showError("Data tidak ditemukan. Periksa penulisan nama, kelas, dan tanggal lahir. Jika masih gagal, hubungi wali kelas.");
+      }
+    } catch (err) {
+      showError("Tidak bisa terhubung ke server. Periksa koneksi internet, lalu coba lagi.");
+    } finally {
+      setLoading(false);
+    }
+  });
+
+  function showResult(d) {
+    current = d;
+    $("rNama").textContent = d.nama;
+    $("rKelas").textContent = "Kelas " + d.kelas;
+    $("rAkun").textContent = d.akun;
+    hidePw();
+    $("formView").style.display = "none";
+    $("result").classList.add("show");
+    $("result").scrollIntoView({ block: "start", behavior: "smooth" });
+  }
+  function hidePw() {
+    $("rPass").textContent = "••••••••••";
+    $("togglePw").textContent = "Lihat";
+    $("togglePw").setAttribute("aria-pressed", "false");
+  }
+  $("togglePw").addEventListener("click", () => {
+    const shown = $("togglePw").getAttribute("aria-pressed") === "true";
+    if (shown) { hidePw(); return; }
+    $("rPass").textContent = current.password;
+    $("togglePw").textContent = "Sembunyikan";
+    $("togglePw").setAttribute("aria-pressed", "true");
+  });
+
+  document.querySelectorAll("[data-copy]").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      const text = btn.dataset.copy === "akun" ? current.akun : current.password;
+      try {
+        await navigator.clipboard.writeText(text);
+      } catch (e) {
+        const t = document.createElement("textarea");
+        t.value = text; document.body.appendChild(t); t.select();
+        try { document.execCommand("copy"); } catch (_) {}
+        t.remove();
+      }
+      const old = btn.textContent;
+      btn.textContent = "Tersalin";
+      btn.classList.add("done");
+      setTimeout(() => { btn.textContent = old; btn.classList.remove("done"); }, 1500);
+    });
+  });
+
+  $("again").addEventListener("click", () => {
+    current = null;
+    $("form").reset();
+    $("result").classList.remove("show");
+    $("formView").style.display = "block";
+    $("nama").focus();
+  });
+</script>
+</body>
+</html>
