@@ -170,7 +170,7 @@
         </div>
         <div class="field">
           <label for="nisn">NISN</label>
-          <input id="nisn" name="nisn" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="10" placeholder="10 angka" required autocomplete="off">
+          <input id="nisn" name="nisn" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="Masukkan NISN" required autocomplete="off">
           <span class="hint">NISN tertera di rapor atau kartu pelajar.</span>
         </div>
         <button class="btn" id="submit" type="submit"><span class="spin" aria-hidden="true"></span><span id="btnText">Cari akun belajar</span></button>
@@ -209,8 +209,8 @@
   // ====== PENGATURAN ======
   // Tempel URL Web App dari Google Apps Script di bawah ini (berakhiran /exec).
   const CONFIG = {
-    SCRIPT_URL: "https://script.google.com/macros/s/AKfycbyKizDT_OeKgbu3YBZhEuXEBsEi_-HX9JBYTtKZB45RJwGlMFtFbvzzW3zwa09GlIledA/exec",
-    SCHOOL: "SMP HANG TUAH 1 SURABAYA"
+    SCRIPT_URL: "",
+    SCHOOL: "Nama Sekolah"
   };
   // ========================
 
@@ -239,7 +239,7 @@
   async function lookup(nama, kelas, nisn) {
     if (!CONFIG.SCRIPT_URL) {
       await new Promise((r) => setTimeout(r, 600));
-      const hit = norm(nama) === norm(DEMO.nama) && normKelas(kelas) === normKelas(DEMO.kelas) && nisn === DEMO.nisn;
+      const hit = norm(nama) === norm(DEMO.nama) && normKelas(kelas) === normKelas(DEMO.kelas) && nisn.replace(/^0+/, "") === DEMO.nisn.replace(/^0+/, "");
       return hit ? { ok: true, nama: DEMO.nama, kelas: DEMO.kelas, akun: DEMO.akun, password: DEMO.password } : { ok: false, error: "not_found" };
     }
     const ctrl = new AbortController();
@@ -259,10 +259,6 @@
     const nama = $("nama").value, kelas = $("kelas").value, nisn = $("nisn").value.replace(/\D/g, "");
     if (!nama.trim() || !kelas.trim() || !nisn) {
       showError("Lengkapi nama, kelas, dan NISN terlebih dahulu.");
-      return;
-    }
-    if (nisn.length !== 10) {
-      showError("NISN terdiri dari 10 angka. Periksa lagi, termasuk angka 0 di depan.");
       return;
     }
     setLoading(true);
